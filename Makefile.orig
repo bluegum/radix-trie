@@ -1,0 +1,27 @@
+
+CFLAGS := -g
+
+srcs  := pat.c
+
+objs  := $(patsubst %.c, %.o, $(srcs))
+
+tgts  := test0 test1
+
+all: pat.a $(tgts)
+
+
+pat.a : pat.c
+
+test0 : test0.c $(objs)
+test1 : test1.c $(objs)
+
+.PHONY: check-syntax
+check-syntax:
+	$(CC) -Wall -Wextra -pedantic -fsyntax-only $(CHK_SOURCES)
+
+
+.PHONY: clean
+
+
+clean: pat.a $(tgts) $(objs)
+	@rm $^
