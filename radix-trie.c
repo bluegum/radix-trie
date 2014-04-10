@@ -33,23 +33,35 @@ THE SOFTWARE.
   uses a pre-configured fan-out factor, maxing out at 32, can be
   configured as 2, 4, 8, 16, and 32, installed in each internal node
   as well as external node. There are two bitmapped "long" type integers combined used to tag each of the fan'd slot,
-  signal the reference type of each slot, containing internal-node
+  signaling the reference type of each slot, containing internal-node
   only, external node only, or internal-node plus external node, or empty.
   The external type is a void type reference points to user data.
 
-  The wide fan-out patricia tree should have less memory overhead when
-  most of the keys are clustered, or more densely pouplated.
+  The wide fan-out radix tree should have less memory overhead when
+  most of the keys are clustered, or more densely pouplated than its
+  binary tree cousin.
 
-  The choosing of maximum of 32 slot is keep the implementation
-  simple, otherwise, the tag bitmap need to be in two array type instead
-  of two 32 bit integer, like those in linux-kernel.
+  The reason of having maximum of 32 slot is keep the implementation
+  simple, so the tag field can be hold in a single 32 bit integer field,
+  otherwise, the tag field need to be in two integer arrays instead
+  of two 32 bit integer, like those implementation in linux-kernel.
 
-  Note: the integertype uint32_t is used in the structure could be
-  able to be replaced by  uint64_t for mapping key with length upto 64
-  bit.
+  Note: the integer type uint32_t is used in the structure should be
+  able to be replaced by  uint64_t for keys with length upto 64
+  bit. However, this experiement is still in the to do list.
 
-  Note: I choose radix_trie instead of radix_tree is to avoid
-  confusion with the version in linux kernel.
+  Note: In order to avoid the confusion with the implementation of
+  radix tree  in linux kernel, radix_trie is used in this
+  implementation, to differential the difference in those data
+  structures.
+
+  Key points of radix-trie:
+
+    variable key length.
+    keys are not NULL terminated.
+    flexible prefix bit length for maximum space efficiency.
+    the macro RADIX_ORDER ranges can be configured from 1 to 5, to
+    suit different applications.
  */
 
 #define RADIX_ORDER 4
