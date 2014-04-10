@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
-
 #include "radix-trie.h"
 
 
@@ -86,7 +84,7 @@ struct node
  * crit_bit: the last bit of common prefix
  * order: the exponent over 2 on span
  */
-static inline
+static INLINE
 int
 radix_trie_find_slot(uint32_t key, int order, int crit_bit)
 {
@@ -109,7 +107,7 @@ radix_trie_find_slot(uint32_t key, int order, int crit_bit)
 
 
 
-static inline
+static INLINE
 void
 radix_trie_set_tag(nod *node, int offset)
 {
@@ -118,7 +116,7 @@ radix_trie_set_tag(nod *node, int offset)
 
 }
 
-static inline
+static INLINE
 int
 radix_trie_get_tag(nod *n, int offset)
 {
@@ -126,7 +124,7 @@ radix_trie_get_tag(nod *n, int offset)
 }
 
 
-static inline
+static INLINE
 void
 radix_trie_clear_tag(nod *node, int offset)
 {
@@ -135,7 +133,7 @@ radix_trie_clear_tag(nod *node, int offset)
 
 }
 
-static inline
+static INLINE
 void
 radix_trie_clear_tag1(nod *node, int offset)
 {
@@ -144,7 +142,7 @@ radix_trie_clear_tag1(nod *node, int offset)
 
 }
 
-static inline
+static INLINE
 void
 radix_trie_set_tag1(nod *node, int offset)
 {
@@ -153,14 +151,14 @@ radix_trie_set_tag1(nod *node, int offset)
 
 }
 
-static inline
+static INLINE
 int
 radix_trie_get_tag1(nod *n, int offset)
 {
     return (n->tag1 & (1<<offset));
 }
 
-static inline
+static INLINE
 nodetype
 radix_trie_get_nodetype(nod *n, int offset)
 {
@@ -188,7 +186,7 @@ radix_trie_get_nodetype(nod *n, int offset)
     return n_empty;
 }
 
-static inline
+static INLINE
 void
 radix_trie_set_nodetype(nod *n, nodetype nt, int offset)
 {

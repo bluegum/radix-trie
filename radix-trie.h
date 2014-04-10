@@ -2,7 +2,20 @@
 #define RADIX_TRIE_H
 
 
+
+#ifdef _MSC_VER
+
+typedef __int32 int32_t;
+typedef unsigned __int32 uint32_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+
+
+#define INLINE __inline
+#else
 #include <stdint.h>
+#define INLINE inline
+#endif
 
 
 
@@ -12,18 +25,22 @@
 typedef struct node nod;
 
 
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC extern
+#endif
+
+EXTERNC nod* radix_trie_insert(nod *r, uint32_t key, int length, void *value);
+
+EXTERNC void radix_trie_walk(nod *root, void (*fn)(uint32_t key, int bit, void *v));
 
 
-extern nod* radix_trie_insert(nod *r, uint32_t key, int length, void *value);
+EXTERNC int radix_trie_find(nod *root, uint32_t key, int len, void **val);
 
-extern void radix_trie_walk(nod *root, void (*fn)(uint32_t key, int bit, void *v));
+EXTERNC int radix_trie_delete(nod *n, uint32_t key, int len);
 
-
-extern int radix_trie_find(nod *root, uint32_t key, int len, void **val);
-
-extern int radix_trie_delete(nod *n, uint32_t key, int len);
-
-extern void radix_trie_delete_all(nod *root);
+EXTERNC void radix_trie_delete_all(nod *root);
 
 
 

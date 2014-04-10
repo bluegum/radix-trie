@@ -5,7 +5,7 @@
 
 struct pair
 {
-    uint k;
+    uint32_t k;
     int  len;
     int  v;
 };
@@ -34,7 +34,7 @@ main(int argc, char **argv)
 
     nod *trie = 0;
     void *val;
-    uint key;
+    uint32_t key;
 
     int i;
 
