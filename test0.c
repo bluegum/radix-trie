@@ -49,19 +49,22 @@ main(int argc, char **argv)
     printf("%s", "\n\n\nWalking\n\n");
     radix_trie_walk(trie, trie_node_print);
 
-    printf("%s", "\n\n\nFinding...\n\n");
+    printf("%s", "\n\n\nLooking-up...exiting entries\n\n");
 
-    key = 0x10ff0002;
-    if (radix_trie_find(trie, key, 32, &val))
+    for (i = 0; i < sizeof(mymap)/sizeof(struct pair); i++)
     {
-        printf("%08X Found, of Value = 0x%x\n", key, (int)val);
-    }
-    else
-    {
-        printf("%08X Not Found\n", key);
+        if (radix_trie_find(trie, mymap[i].k, mymap[i].len, &val))
+        {
+            printf("%08X Found, of Value = 0x%x\n", mymap[i].k, (int)val);
+        }
+        else
+        {
+            printf("%08X Not Found\n", mymap[i].k);
+        }
+
     }
 
-
+    printf("%s", "\n\n\nLooking-up...non-exit entries\n\n");
     key = 0x10ff2002;
     if (radix_trie_find(trie, key, 32, &val))
     {

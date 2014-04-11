@@ -64,14 +64,8 @@ THE SOFTWARE.
     suit different applications.
  */
 
+#define KEYSIZE_MAX 32
 #define RADIX_ORDER 4
-
-#if (RADIX_ORDER % 2)
-  #define BIT_CHUNK 1
-#else
-  #define BIT_CHUNK RADIX_ORDER
-#endif
-
 #define MAP_SIZE (1<<RADIX_ORDER)
 
 typedef enum
@@ -82,7 +76,7 @@ typedef enum
     n_composite
 } nodetype;
 
-#if BIT_CHUNK > 5
+#if RADIX_ORDER > 5
 #error Maximum fan factor is 32
 #endif
 
@@ -122,17 +116,17 @@ static INLINE
 int
 radix_trie_find_slot(uint32_t key, int order, int crit_bit)
 {
-    int len = 32;
+    int len = KEYSIZE_MAX;
 
     uint32_t n_crit_bit = crit_bit + order;
 
     uint32_t n = 0;
 
-    uint32_t msk = ~0UL >> (32 - order);
+    uint32_t msk = ~0UL >> (KEYSIZE_MAX - order);
 
-    n =  ~0UL >> (32 - n_crit_bit);
+    n =  ~0UL >> (KEYSIZE_MAX - n_crit_bit);
 
-    n &= key >> (32 - n_crit_bit);
+    n &= key >> (KEYSIZE_MAX - n_crit_bit);
 
     n &= msk;
 
@@ -262,7 +256,7 @@ radix_trie_find_prefix(uint32_t k0, uint32_t k1)
     int i = 0;
 
     if (x == 0)
-        return 32;
+        return KEYSIZE_MAX;
     while ( (x & msk) == 0)
     {
         i++;
@@ -284,9 +278,9 @@ radix_trie_new(uint32_t key, int len, int prefix, void *value, int external)
     int crit_bit;
     int first_order;
 
-    if (len < 32)
+    if (len < KEYSIZE_MAX)
     {
-        _key = key << (32 - len);
+        _key = key << (KEYSIZE_MAX - len);
     }
     else
     {
@@ -305,12 +299,12 @@ radix_trie_new(uint32_t key, int len, int prefix, void *value, int external)
     }
     else
     {
-        crit_bit = 32 - prefix;
+        crit_bit = KEYSIZE_MAX - prefix;
         crit_bit = (crit_bit + RADIX_ORDER - 1) / RADIX_ORDER * RADIX_ORDER;
-        crit_bit = 32 - crit_bit;
+        crit_bit = KEYSIZE_MAX - crit_bit;
     }
 
-    first_order = 32 % RADIX_ORDER;
+    first_order = KEYSIZE_MAX % RADIX_ORDER;
     if (prefix < first_order)
     {
         n->crit_bit = 0;
@@ -322,7 +316,7 @@ radix_trie_new(uint32_t key, int len, int prefix, void *value, int external)
 
     if (n->crit_bit == 0)
     {
-        n->order = 32 % RADIX_ORDER;
+        n->order = KEYSIZE_MAX % RADIX_ORDER;
         if (n->order == 0)
             n->order = RADIX_ORDER;
 
@@ -361,9 +355,9 @@ radix_trie_insert(nod *r, uint32_t key, int length, void *value)
     int  i, prefix;
     uint32_t _key;
 
-    if (length < 32)
+    if (length < KEYSIZE_MAX)
     {
-        _key = key << (32 - length);
+        _key = key << (KEYSIZE_MAX - length);
     }
     else
     {
@@ -418,9 +412,9 @@ radix_trie_insert(nod *r, uint32_t key, int length, void *value)
         }
         else
         {
-            match = 32 - prefix;
+            match = KEYSIZE_MAX - prefix;
             match = (match + RADIX_ORDER - 1) / RADIX_ORDER * RADIX_ORDER;
-            match = 32 - match;
+            match = KEYSIZE_MAX - match;
 
             if (match <= 0)
                 match = 0;
@@ -449,7 +443,7 @@ radix_trie_insert(nod *r, uint32_t key, int length, void *value)
             {
                 // insert new node
                 nod *n_child;
-                n_child = radix_trie_new(_key, 32, length, value, 1); /* crit_bit is the last bit */
+                n_child = radix_trie_new(_key, KEYSIZE_MAX, length, value, 1); /* crit_bit is the last bit */
                 r->fan[i] = n_child;
                 radix_trie_set_nodetype(r, n_internal, i);
             }
@@ -481,7 +475,7 @@ radix_trie_insert(nod *r, uint32_t key, int length, void *value)
                 /* 5. insert the new node to the slot */
 
                 nod *n_child =
-                    radix_trie_new(_key, 32, length, value, 1); /* crit_bit is the last bit, and its an external */
+                    radix_trie_new(_key, KEYSIZE_MAX, length, value, 1); /* crit_bit is the last bit, and its an external */
 
                 n_child->value = r->fan[i];
                 radix_trie_set_nodetype(r, n_composite, i);
@@ -518,12 +512,12 @@ radix_trie_insert(nod *r, uint32_t key, int length, void *value)
          * crit_bit is set to the key_length subtracted by fanning factor, 
          * to INDICATE this node contains only externals, and it will stay this way.
          */
-        n_child = radix_trie_new(_key, 32, length, value, 1);
+        n_child = radix_trie_new(_key, KEYSIZE_MAX, length, value, 1);
 
         /* new root for sub-tree */
 
 
-        n_nod = radix_trie_new(_key, 32, prefix, r->value, 0);
+        n_nod = radix_trie_new(_key, KEYSIZE_MAX, prefix, r->value, 0);
         /* connect the old root to the 1st slot */
         slot_old = radix_trie_find_slot(r->key, n_nod->order, n_nod->crit_bit);
         n_nod->fan[slot_old] = r;
@@ -570,8 +564,8 @@ radix_trie_walk(nod *root, void (*fn)(uint32_t key, int bit, void *v))
 
         nodetype nt = radix_trie_get_nodetype(root, i);
 
-        k = (root->key) & (0xffffffff << (32 - root->crit_bit));
-        k += i << (32 - root->crit_bit - root->order);
+        k = (root->key) & (0xffffffff << (KEYSIZE_MAX - root->crit_bit));
+        k += i << (KEYSIZE_MAX - root->crit_bit - root->order);
 
         if (nt == n_external)
         {
@@ -597,83 +591,107 @@ radix_trie_walk(nod *root, void (*fn)(uint32_t key, int bit, void *v))
  *  1 for found, value stored in val
  */
 int
-radix_trie_find(nod *root, uint32_t key, int len, void **val)
+radix_trie_find(nod *r, uint32_t key, int len, void **val)
 {
 
-    int i, j;
+    int i;
     uint32_t k;
     nodetype nt;
     int length = len;
+    int prefix;
 
-    if (!root)
+    if (!r)
         return 0;
 
-    if (len < 32)
-        k = key << (32 - len);
+    if (len < KEYSIZE_MAX)
+        k = key << (KEYSIZE_MAX - len);
     else
         k = key;
 
-    j = 28;
-    if (root->crit_bit == 0)
+    while (len > r->crit_bit)
     {
-    
-        i = k >> (32 - BIT_CHUNK);
 
-        nt = radix_trie_get_nodetype(root, i);
-        if (nt == n_internal)
+        i = radix_trie_find_slot(k, r->order, r->crit_bit);
+        nt = radix_trie_get_nodetype(r, i);
+        switch (nt)
         {
-            // slot is external data
-            if (len == BIT_CHUNK)
-            {
-                // found
-                *val = root->fan[i];
-                return 1;
-            }
-            // fall through
+            case n_internal:
+                r = r->fan[i];
+                break;
+            case n_composite:
+                r = r->fan[i];
+                break;
+            case n_external:
+                if (r->crit_bit + r->order == len)
+                {
+                    break;
+                }
+                else
+                {
+                    return 0;
+                }
+                break;
+            default:
+                return 0;
+                break;
         }
-        else if (nt == n_composite)
+        if (r->crit_bit + r->order == len)
         {
-            if (len == BIT_CHUNK)
-            {
-                // found
-                *val = root->fan[i]->value;
-                return 1;
-            }
-            // fall through
-        }
-        else if (nt == n_external)
-        {
-            if (len == BIT_CHUNK)
-            {
-                // found
-                *val = root->fan[i];
-                return 1;
-            }
-            // fall through
-        }
-        else
-        {
-            return 0;
+            break;
         }
     }
 
-    if (!root)
-        return 0;
+    i = radix_trie_find_slot(k, r->order, r->crit_bit);
+    nt = radix_trie_get_nodetype(r, i);
 
-    while (len > root->crit_bit)
+    prefix = radix_trie_find_prefix(k, r->key);
+    if (prefix > length)
+        prefix = length;
+
+    if (prefix > r->crit_bit + r->order)
     {
-        int prefix = radix_trie_find_prefix(k, root->key);
-
-        i = (k >> (32 - root->crit_bit - BIT_CHUNK)) & (0xff >> (8 - BIT_CHUNK));
-        nt = radix_trie_get_nodetype(root, i);
-
-        if (prefix > root->crit_bit + root->order)
+        switch (nt)
+        {
+            case n_internal:
+            case n_composite:
+                r = r->fan[i];
+                break;
+            case n_external:
+                return 0;
+                break;
+            default:
+                return 0;
+                break;
+        }
+    }
+    else
+    {
+        if (length == r->crit_bit + r->order)
+        {
+            switch (nt)
+            {
+                case n_composite:
+                    *val = r->fan[i]->value;
+                    return 1;
+                    break;
+                case n_external:
+                    *val = r->fan[i];
+                    return 1;
+                    break;
+                case n_internal:
+                default:
+                    return 0;
+                    break;
+            }
+                
+        }
+        else
         {
             switch (nt)
             {
                 case n_internal:
                 case n_composite:
-                    root = root->fan[i];
+                    r = r->fan[i];
                     break;
                 case n_external:
                     return 0;
@@ -683,62 +701,9 @@ radix_trie_find(nod *root, uint32_t key, int len, void **val)
                     break;
             }
         }
-        else
-        {
-            if (length == root->crit_bit + root->order)
-            {
-                switch (nt)
-                {
-                    case n_composite:
-                        *val = root->fan[i]->value;
-                        return 1;
-                        break;
-                    case n_external:
-                        *val = root->fan[i];
-                        return 1;
-                        break;
-                    case n_internal:
-                    default:
-                        return 0;
-                        break;
-                }
-                
-            }
-            else
-            {
-                switch (nt)
-                {
-                    case n_internal:
-                    case n_composite:
-                        root = root->fan[i];
-                        break;
-                    case n_external:
-                        return 0;
-                        break;
-                    default:
-                        return 0;
-                        break;
-                }
-            }
-        }
-
-        len -= BIT_CHUNK;
-        j -= BIT_CHUNK;
-    }
-
-    if (len + BIT_CHUNK == root->crit_bit)
-    {
-        i = (k >> (32 - root->crit_bit - BIT_CHUNK)) & (0xff >> (8 - BIT_CHUNK));
-        if (radix_trie_get_nodetype(root, i) == n_external)
-        {
-            *val = root->fan[i];
-            return 1;
-        }
-
     }
 
     return 0;
-
 }
 
 static
@@ -767,8 +732,8 @@ radix_trie_delete(nod *n, uint32_t key, int len)
     if (!n)
         return r;
 
-    if (len < 32)
-        k = key << (32 - len);
+    if (len < KEYSIZE_MAX)
+        k = key << (KEYSIZE_MAX - len);
     else
         k = key;
 
@@ -848,7 +813,7 @@ radix_trie_delete_all(nod *root)
     if (!root)
         return;
 
-    n = 1 << BIT_CHUNK;
+    n = 1 << root->order;
     for (i = 0; i < n; i++)
     {
 
