@@ -81,6 +81,9 @@ typedef enum
 #endif
 
 
+#ifdef DEBUG
+#define WARNING(...) fprintf(stderr, __VA_ARGS__)
+#endif
 
 
 
@@ -544,7 +547,7 @@ radix_trie_insert(nod *r, uint32_t key, int length, void *value)
     }
     else if (match > r->crit_bit)
     {
-        printf("Something weird happened\n");
+        WARNING("%s", "Something weird happened\n");
     }
 
     return _r;
@@ -729,6 +732,7 @@ radix_trie_delete(nod *n, uint32_t key, int len)
     int  i;
     uint32_t k;
 
+
     if (!n)
         return r;
 
@@ -787,7 +791,7 @@ radix_trie_delete(nod *n, uint32_t key, int len)
                 r = 1;
                 break;
             default:
-                printf("%08X is not in the set\n", key);
+                WARNING("%08X is not in the set\n", key);
                 break;
         }
     }
@@ -798,7 +802,7 @@ radix_trie_delete(nod *n, uint32_t key, int len)
     }
     else
     {
-        printf ("error in %s: crit_bit = %d > len = %d\n", __FUNCTION__, n->crit_bit, len);
+        WARNING("crit_bit = %d > len = %d\n", n->crit_bit, len);
         return 0;
     }
     return r;
