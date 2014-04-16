@@ -55,13 +55,15 @@ THE SOFTWARE.
   implementation, to differential the difference in those data
   structures.
 
-  Key points of radix-trie:
+  Key points of this radix-trie implementation:
 
-    variable key length.
-    keys are not NULL terminated.
-    flexible prefix bit length for maximum space efficiency.
-    the macro RADIX_ORDER ranges can be configured from 1 to 5, to
-    suit different applications.
+  * variable key length.
+  *  keys are not NULL terminated.
+  *  flexible prefix bit length for maximum space efficiency.
+  *  the macro RADIX_ORDER ranges can be configured from 1 to 5, to
+     suit different applications.
+  *  full 32 bit keys are kept in node, unlike string based
+     implementation, as keeping only portions of prefix.
  */
 
 #define KEYSIZE_MAX 32
@@ -83,6 +85,8 @@ typedef enum
 
 #ifdef DEBUG
 #define WARNING(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define WARNING(...)
 #endif
 
 
